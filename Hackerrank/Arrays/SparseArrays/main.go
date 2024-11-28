@@ -13,7 +13,7 @@ import "fmt"
  */
 
 func matchingStrings(stringList []string, queries []string) []int32 {
-	strFrequency := make(map[string]int32)
+	strFrequency := make(map[string]int32) // maps are a list of key value pairs; key type in square brackets, value type immediately after it
 	res := make([]int32, len(queries))
 
 	for _, str := range stringList {
