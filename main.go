@@ -1,7 +1,10 @@
 package main
 
 import (
+	"GoLang-FirstDive/controllers"
 	"html/template"
+	"io/ioutil"
+	"net/http"
 	"os"
 )
 
@@ -20,13 +23,46 @@ Price With Tax: {{ calctax .Price | printf "%.2f" }}
 `
 
 func main() {
-	p := Product{"Pizza", 10}
+	templates := populateTemplates()
+	controllers.StartUp(templates)
+	http.ListenAndServe(":9000", nil)
+}
 
-	funcMap := template.FuncMap{}
-	funcMap["calctax"] = func(price float64) float64 {
-		return price * (1 + tax)
+func populateTemplates() map[string]*template.Template {
+	result := make(map[string]*template.Template)
+	const basePath = "templates"
+	layout := template.Must(template.ParseFiles(basePath + "/_layout.html"))
+	template.Must(layout.ParseFiles(basePath+"/header.html", basePath+"/footer.html"))
+
+	dir, err := os.Open(basePath + "/content")
+	if err != nil {
+		panic("Cannot open template directory: " + err.Error())
 	}
 
-	t := template.Must(template.New("").Funcs(funcMap).Parse(templateString))
-	t.Execute(os.Stdout, p)
+	files, err := dir.Readdir(-1)
+	if err != nil {
+		panic("Cannot read template directory: " + err.Error())
+	}
+
+	for _, file := range files {
+		f, err := os.Open(basePath + "/content/" + file.Name())
+		if err != nil {
+			panic("Cannot open template file: " + file.Name() + err.Error())
+		}
+
+		content, err := ioutil.ReadAll(f)
+		if err != nil {
+			panic("Cannot read template file: " + file.Name() + err.Error())
+		}
+
+		f.Close()
+
+		tmpl := template.Must(layout.Clone())
+		_, err = tmpl.Parse(string(content))
+		if err != nil {
+			panic("Cannot parse template: " + file.Name() + err.Error())
+		}
+		result[file.Name()] = tmpl
+	}
+	return result
 }
