@@ -1,40 +1,62 @@
 package main
 
 import (
-	"fmt"
+	"html/template"
+	"io/ioutil"
 	"net/http"
-	"time"
+	"os"
 )
 
 func main() {
-	// 1. Serve static files from the "/static" route
-	http.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("./static"))))
-
-	// 2. RedirectHandler
-	// Redirect users visiting "/google" to "https://www.google.com"
-	http.Handle("/google", http.RedirectHandler("https://www.google.com", http.StatusMovedPermanently))
-
-	// 3. NotFoundHandler
-	// Use the default NotFoundHandler for "/notfound"
-	http.Handle("/notfound", http.NotFoundHandler())
-
-	// 4. TimeoutHandler
-	// Wrap a slow handler with a timeout of 2 seconds
-	slowHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(5 * time.Second) // Simulate a slow response
-		w.Write([]byte("This response took too long!"))
-	})
-	http.Handle("/slow", http.TimeoutHandler(slowHandler, 2*time.Second, "Request timed out"))
-
-	// 5. Custom catch-all fallback for unmatched routes
+	templates := populateTemplates()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/notfound", http.StatusSeeOther)
+		requestedFile := r.URL.Path[1:]
+		template := templates[requestedFile+".html"]
+		if template != nil {
+			template.Execute(w, nil)
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
 	})
+	http.Handle("/css/", http.FileServer(http.Dir("./css/")))
+	http.ListenAndServe(":9000", nil)
+}
 
-	// Start the server on port 8080
-	fmt.Println("Starting server on :9000...")
-	err := http.ListenAndServe(":9000", nil)
+func populateTemplates() map[string]*template.Template {
+	result := make(map[string]*template.Template)
+	const basePath = "templates"
+	layout := template.Must(template.ParseFiles(basePath + "/_layout.html"))
+	template.Must(layout.ParseFiles(basePath+"/header.html", basePath+"/footer.html"))
+
+	dir, err := os.Open(basePath + "/content")
 	if err != nil {
-		fmt.Printf("Error starting server: %v\n", err)
+		panic("Cannot open template directory: " + err.Error())
 	}
+
+	files, err := dir.Readdir(-1)
+	if err != nil {
+		panic("Cannot read template directory: " + err.Error())
+	}
+
+	for _, file := range files {
+		f, err := os.Open(basePath + "/content/" + file.Name())
+		if err != nil {
+			panic("Cannot open template file: " + file.Name() + err.Error())
+		}
+
+		content, err := ioutil.ReadAll(f)
+		if err != nil {
+			panic("Cannot read template file: " + file.Name() + err.Error())
+		}
+
+		f.Close()
+
+		tmpl := template.Must(layout.Clone())
+		_, err = tmpl.Parse(string(content))
+		if err != nil {
+			panic("Cannot parse template: " + file.Name() + err.Error())
+		}
+		result[file.Name()] = tmpl
+	}
+	return result
 }
