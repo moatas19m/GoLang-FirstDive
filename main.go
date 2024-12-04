@@ -1,6 +1,7 @@
 package main
 
 import (
+	"GoLang-FirstDive/viewmodel"
 	"html/template"
 	"io/ioutil"
 	"net/http"
@@ -12,8 +13,9 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		requestedFile := r.URL.Path[1:]
 		template := templates[requestedFile+".html"]
+		context := viewmodel.NewBase()
 		if template != nil {
-			template.Execute(w, nil)
+			template.Execute(w, context)
 		} else {
 			w.WriteHeader(http.StatusNotFound)
 		}

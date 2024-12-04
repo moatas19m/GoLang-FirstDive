@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Golang Training</title>
+    <title>{{.Title}}</title>
     <link href="/css/app.css" rel="stylesheet">
     {{block "styles" .}}{{end}}
 </head>>
 <body>
-{{template "header.html" .PageMetaData}}
- {{template "content"}}
-{{template "footer.html"}}
+{{template "header.html" .}}
+ {{template "content" .}}
+{{template "footer.html" .}}
 {{block "script" .}}{{end}}
 </body>
 
