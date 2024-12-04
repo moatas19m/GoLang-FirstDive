@@ -12,20 +12,21 @@ type Product struct {
 	Price float64
 }
 
-func (p Product) PriceWithTax() float64 {
-	return p.Price * (1 + tax)
-}
-
 const templateString = `
 {{- "Item Info:" }}
 Name: {{ .Name }}
 Price: {{ printf "$%.2f" .Price}}
-Price With Tax: {{ .PriceWithTax | printf "%.2f" }}
+Price With Tax: {{ calctax .Price | printf "%.2f" }}
 `
 
 func main() {
 	p := Product{"Pizza", 10}
 
-	t := template.Must(template.New("templateString").Parse(templateString))
+	funcMap := template.FuncMap{}
+	funcMap["calctax"] = func(price float64) float64 {
+		return price * (1 + tax)
+	}
+
+	t := template.Must(template.New("").Funcs(funcMap).Parse(templateString))
 	t.Execute(os.Stdout, p)
 }
