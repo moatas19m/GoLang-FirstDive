@@ -28,7 +28,6 @@ func init() {
 func (b *Book) CreateBook() (*Book, error) {
 	err := db.Create(b).Error
 	if err != nil {
-		log.Fatal(err)
 		return nil, err
 	}
 	return b, nil
@@ -38,33 +37,30 @@ func GetAllBooks() ([]Book, error) {
 	var books []Book
 	err := db.Find(&books).Error
 	if err != nil {
-		log.Fatal(err)
 		return nil, err
 	}
 	return books, nil
 }
 
-func GetBookById(id uint) (*Book, error) {
+func GetBookById(id int64) (*Book, error) {
 	var book Book
 	err := db.First(&book, id).Error
 	if err != nil {
-		log.Fatal(err)
 		return nil, err
 	}
 	return &book, nil
 }
 
-func DeleteBookById(id uint) (Book, error) {
+func DeleteBookById(id int64) (Book, error) {
 	var book Book
 	err := db.Delete(&book, id).Error
 	if err != nil {
-		log.Fatal(err)
 		return book, err
 	}
 	return book, nil
 }
 
-func UpdateBookById(id uint, updatedBook *Book) (Book, error) {
+func UpdateBookById(id int64, updatedBook *Book) (Book, error) {
 	var book Book
 	if err := db.First(&book, id).Error; err != nil {
 		return book, err
@@ -143,7 +139,7 @@ func UpdateBookById(id uint, updatedBook *Book) (Book, error) {
 //
 // 6. **Practical Example**
 //    struct Book {
-//        ID          uint
+//        ID          INT64
 //        Name        string
 //        Author      string
 //        Publication string

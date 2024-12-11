@@ -1,3 +1,4 @@
+//go:debug x509negativeserial=1
 package main
 
 import (
@@ -13,5 +14,4 @@ func main() {
 	routes.RegisterBookStoreRoutes(r)
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":9000", r))
-
 }
