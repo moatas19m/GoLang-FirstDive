@@ -9,7 +9,7 @@ import (
 var DB *gorm.DB
 
 func Connect() {
-	dsn := "Server=172.17.0.1,1433;Database=BookStore;User Id=sa;Password=Moatas19M200*;TrustServerCertificate=True;"
+	dsn := "your-connection-string"
 	log.Printf("Connecting to database %s", dsn)
 	d, err := gorm.Open(sqlserver.Open(dsn), &gorm.Config{})
 	if err != nil {
